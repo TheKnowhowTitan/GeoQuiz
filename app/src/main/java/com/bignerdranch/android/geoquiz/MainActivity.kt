@@ -1,9 +1,11 @@
 package com.bignerdranch.android.geoquiz
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
-import android.widget.*
+import android.widget.Button
+import android.widget.ImageButton
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
@@ -14,12 +16,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var previousButton: ImageButton
 
     private val questionBank = listOf(
-            Question(R.string.question_australia, true),
-            Question(R.string.question_oceans, true),
-            Question(R.string.question_africa, false),
-            Question(R.string.question_americas, true),
-            Question(R.string.question_asia, true),
-            Question(R.string.question_mideast, false)
+            Question(R.string.question_australia, true, isAnswered = false),
+            Question(R.string.question_oceans, true, isAnswered = false),
+            Question(R.string.question_africa, false, isAnswered = false),
+            Question(R.string.question_americas, true, isAnswered = false),
+            Question(R.string.question_asia, true, isAnswered = false),
+            Question(R.string.question_mideast, false, isAnswered = false)
     )
 
     private var currentIndex = 0
@@ -34,15 +36,17 @@ class MainActivity : AppCompatActivity() {
         previousButton = findViewById(R.id.previous_button)
         questionTextView = findViewById(R.id.question_text_view)
 
-        trueButton.setOnClickListener {view: View ->
+        trueButton.setOnClickListener {
+            questionBank[currentIndex].isAnswered = true
             checkAnswer(true)
         }
 
-        falseButton.setOnClickListener {view: View ->
+        falseButton.setOnClickListener {
+            questionBank[currentIndex].isAnswered = true
             checkAnswer(false)
         }
 
-        nextButton.setOnClickListener {view: View? ->
+        nextButton.setOnClickListener {
             seeNextQuestion()
         }
 
@@ -63,19 +67,26 @@ class MainActivity : AppCompatActivity() {
         updateQuestion()
     }
 
+    private fun changeButtonState() {
+        trueButton.isEnabled = !questionBank[currentIndex].isAnswered
+        falseButton.isEnabled = !questionBank[currentIndex].isAnswered
+    }
+
     private fun updateQuestion() {
         questionTextView.setText(questionBank[currentIndex].textResId)
+        changeButtonState()
     }
 
     private fun checkAnswer(userAnswer: Boolean) {
         val correctAnswer = questionBank[currentIndex].answer
 
-        val messageResId = if(userAnswer == correctAnswer) {
+        val messageResId = if (userAnswer == correctAnswer) {
             R.string.correct_toast
         } else {
             R.string.incorrect_toast
         }
 
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
+        changeButtonState()
     }
 }
