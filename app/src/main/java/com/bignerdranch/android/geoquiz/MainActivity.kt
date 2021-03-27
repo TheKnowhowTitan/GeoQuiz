@@ -2,13 +2,16 @@ package com.bignerdranch.android.geoquiz
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProviders
 
 private const val TAG = "MainActivity"
+private const val KEY_INDEX = "index"
 
 class MainActivity : AppCompatActivity() {
 
@@ -18,22 +21,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var questionTextView: TextView
     private lateinit var previousButton: ImageButton
 
-    private val questionBank = listOf(
-            Question(R.string.question_australia, true, isAnswered = false),
-            Question(R.string.question_oceans, true, isAnswered = false),
-            Question(R.string.question_africa, false, isAnswered = false),
-            Question(R.string.question_americas, true, isAnswered = false),
-            Question(R.string.question_asia, true, isAnswered = false),
-            Question(R.string.question_mideast, false, isAnswered = false)
-    )
-
-    private var currentIndex = 0
     private var score = 0
+    private val quizViewModel: QuizViewModel by lazy {
+        ViewModelProviders.of(this).get(QuizViewModel::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate(Bundle?) called")
         setContentView(R.layout.activity_main)
+
+        val currentIndex = savedInstanceState?.getInt(KEY_INDEX) ?: 0
+        quizViewModel.currentIndex = currentIndex
 
         trueButton = findViewById(R.id.true_button)
         falseButton = findViewById(R.id.false_button)
@@ -41,28 +40,27 @@ class MainActivity : AppCompatActivity() {
         previousButton = findViewById(R.id.previous_button)
         questionTextView = findViewById(R.id.question_text_view)
 
-        trueButton.setOnClickListener {
-            questionBank[currentIndex].isAnswered = true
+        trueButton.setOnClickListener { view: View ->
             checkAnswer(true)
             displayScoreIfTestOver()
         }
 
-        falseButton.setOnClickListener {
-            questionBank[currentIndex].isAnswered = true
+        falseButton.setOnClickListener { view: View ->
             checkAnswer(false)
             displayScoreIfTestOver()
         }
 
-        nextButton.setOnClickListener {
-            seeNextQuestion()
-        }
-
         questionTextView.setOnClickListener {
-            seeNextQuestion()
+            quizViewModel.moveToNext()
         }
 
         previousButton.setOnClickListener {
-            currentIndex = (currentIndex - 1 + questionBank.size) % questionBank.size
+            quizViewModel.moveToPrevious()
+            updateQuestion()
+        }
+
+        nextButton.setOnClickListener { view: View? ->
+            quizViewModel.moveToNext()
             updateQuestion()
         }
 
@@ -81,29 +79,23 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun seeNextQuestion() {
-        currentIndex = (currentIndex + 1) % questionBank.size
-        updateQuestion()
-    }
-
     private fun changeButtonState() {
-        trueButton.isEnabled = !questionBank[currentIndex].isAnswered
-        falseButton.isEnabled = !questionBank[currentIndex].isAnswered
+        trueButton.isEnabled = !quizViewModel.currentAnsweredState
+        falseButton.isEnabled = !quizViewModel.currentAnsweredState
     }
 
     private fun updateQuestion() {
-        questionTextView.setText(questionBank[currentIndex].textResId)
         changeButtonState()
+        questionTextView.setText(quizViewModel.currentQuestionText)
     }
 
     private fun checkAnswer(userAnswer: Boolean) {
-        val correctAnswer = questionBank[currentIndex].answer
+        val correctAnswer = quizViewModel.currentQuestionAnswer
 
         val messageResId = if (userAnswer == correctAnswer) {
-            score += 1
+            quizViewModel.increaseScore()
             R.string.correct_toast
         } else {
-            score -= 1
             R.string.incorrect_toast
         }
 
@@ -124,6 +116,12 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         Log.d(TAG, "onPause() called")
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        Log.i(TAG, "onSaveInstanceState")
+        outState.putInt(KEY_INDEX, quizViewModel.currentIndex)
     }
 
     override fun onStop() {
