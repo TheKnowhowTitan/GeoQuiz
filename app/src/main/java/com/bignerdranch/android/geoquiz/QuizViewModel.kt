@@ -44,4 +44,11 @@ class QuizViewModel : ViewModel() {
         score += 1
     }
 
+    fun allQuestionsAreAnswered(): Boolean {
+        for (question in questionBank)
+            if (!question.isAnswered)
+                return false
+        return true
+    }
+
 }

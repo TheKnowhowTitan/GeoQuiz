@@ -21,7 +21,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var questionTextView: TextView
     private lateinit var previousButton: ImageButton
 
-    private var score = 0
     private val quizViewModel: QuizViewModel by lazy {
         ViewModelProviders.of(this).get(QuizViewModel::class.java)
     }
@@ -40,18 +39,21 @@ class MainActivity : AppCompatActivity() {
         previousButton = findViewById(R.id.previous_button)
         questionTextView = findViewById(R.id.question_text_view)
 
-        trueButton.setOnClickListener { view: View ->
+        trueButton.setOnClickListener {
+            quizViewModel.questionIsAnswered()
             checkAnswer(true)
-            displayScoreIfTestOver()
+            displayScore()
         }
 
-        falseButton.setOnClickListener { view: View ->
+        falseButton.setOnClickListener {
+            quizViewModel.questionIsAnswered()
             checkAnswer(false)
-            displayScoreIfTestOver()
+            displayScore()
         }
 
         questionTextView.setOnClickListener {
             quizViewModel.moveToNext()
+            updateQuestion()
         }
 
         previousButton.setOnClickListener {
@@ -67,16 +69,9 @@ class MainActivity : AppCompatActivity() {
         updateQuestion()
     }
 
-    private fun displayScoreIfTestOver() {
-        if (allQuestionsAreAnswered())
-            Toast.makeText(this, getString(R.string.display_score, score), Toast.LENGTH_SHORT).show()
-    }
-
-    private fun allQuestionsAreAnswered(): Boolean {
-        for (question in questionBank)
-            if (!question.isAnswered)
-                return false
-        return true
+    private fun displayScore() {
+        if (quizViewModel.allQuestionsAreAnswered())
+            Toast.makeText(this, getString(R.string.display_score, quizViewModel.score), Toast.LENGTH_SHORT).show()
     }
 
     private fun changeButtonState() {
