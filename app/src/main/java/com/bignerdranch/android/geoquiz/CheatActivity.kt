@@ -34,14 +34,19 @@ class CheatActivity : AppCompatActivity() {
         answerTextView = findViewById(R.id.answer_text_view)
         showAnswerButton = findViewById(R.id.show_answer_button)
 
+        updateAnswerText()
+
         showAnswerButton.setOnClickListener {
+            userHasCheated = true
             updateAnswerText()
             setAnswerShownResult(userHasCheated)
         }
+        setAnswerShownResult(userHasCheated)
     }
 
     private fun updateAnswerText() {
         val answerText = when {
+            !userHasCheated -> R.string.no_text
             answerIsTrue -> R.string.true_button
             else -> R.string.false_button
         }
@@ -50,14 +55,16 @@ class CheatActivity : AppCompatActivity() {
     }
 
     private fun setAnswerShownResult(isAnswerShown: Boolean) {
+        Log.i("CheatActivity", "userHasCheated = $userHasCheated")
         val data = Intent().apply {
             putExtra(EXTRA_ANSWER_SHOWN, isAnswerShown)
         }
         setResult(Activity.RESULT_OK, data)
     }
 
-    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
-        super.onSaveInstanceState(outState, outPersistentState)
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        Log.i("CheatActivity", "userHasCheated = $userHasCheated")
         outState.putBoolean(KEY_USER_CHEAT_STATUS, userHasCheated)
     }
 

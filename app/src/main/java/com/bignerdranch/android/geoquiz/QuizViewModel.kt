@@ -18,11 +18,20 @@ class QuizViewModel : ViewModel() {
     var currentIndex = 0
     var isCheater = false
 
+    private val cheatStatus = MutableList(questionBank.size) { false }
+
     val currentQuestionAnswer: Boolean
         get() = questionBank[currentIndex].answer
 
     val currentQuestionText: Int
         get() = questionBank[currentIndex].textResId
+
+    val currentQuestionCheatStatus: Boolean
+        get() = cheatStatus[currentIndex]
+
+    fun setCheatStatus(hasCheated: Boolean) {
+        cheatStatus[currentIndex] = hasCheated
+    }
 
     fun moveToNext() {
         currentIndex = (currentIndex + 1) % questionBank.size
